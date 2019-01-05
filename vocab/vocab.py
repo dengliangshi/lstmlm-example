@@ -133,7 +133,7 @@ class Vocab(object):
         """
         index_vector = []
         file_name = ('%s.txt' % data_type)
-        # 
+        # get the target data file
         data_file = os.path.join(self.data_path, file_name)
         input_file = codecs.open(data_file, 'r', 'utf-8')
         # get the indexes of special mark
