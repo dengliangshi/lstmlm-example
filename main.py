@@ -31,3 +31,4 @@ logger = set_logger('LSTMLM', log_file)
 if __name__ == '__main__':
     model = Model()
     model.init_model(logger, args)
+    model.train()

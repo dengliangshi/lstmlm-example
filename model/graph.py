@@ -10,7 +10,7 @@
 
 # ---------------------------------------------------------Libraries--------------------------------------------------------
 # Standard Libraries
-
+import os
 
 # Third-party Libraries
 import numpy as np
@@ -48,14 +48,13 @@ class Graph(object):
         """
         # get configuration parameters
         self.vocab_size    = vocab_size
-        self.embidding_num = embidding_num
         self.batch_size    = args.batch_size
         self.seq_length    = args.seq_length
         self.unit_num      = args.unit_num
         self.layer_num     = args.layer_num
         self.embedding_dim = args.embedding_dim
-        self.ikeep_prob    = args.input_keep_prob
-        self.hkeep_prob    = args.hidden_keep_prob
+        self.ikeep_prob    = args.ikeep_prob
+        self.hkeep_prob    = args.hkeep_prob
         self.grad_cutoff   = args.grad_cutoff
         # create the whole graph of lstm-rnnlm
         self._create_graph(is_train, is_reuse)
@@ -77,7 +76,7 @@ class Graph(object):
             batch_size = input_tensor.shape[0]
             # create lstm cells for lstm hidden layers
             for i in range(layer_num):
-                lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(unit_num, forget_bias = 1.0)
+                lstm_cell = tf.nn.rnn_cell.LSTMCell(unit_num, forget_bias = 1.0)
                 # apply dropout to hidden layers except the last one  if training 
                 if is_train and (keep_prob < 1) and (i < layer_num - 1):
                     wrapper_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_cell,
@@ -109,13 +108,13 @@ class Graph(object):
                 self.seq_length], name = 'target_holder', dtype = tf.int32)
             # create embedding lookup table for tokens
             embeddings = tf.get_variable(shape = [self.vocab_size,
-                embedding_dim], name = 'embeddings', dtype = tf.float32)
-            input_tensor = tf.nn.embedding_lookup(embeddings, input_holder)
+                self.embedding_dim], name = 'embeddings', dtype = tf.float32)
+            input_tensor = tf.nn.embedding_lookup(embeddings, self.input_holder)
             # apply dropout on input layer
-            if is_train and self.input_keep_prob < 1:
+            if is_train and self.ikeep_prob < 1:
                 self.input_tensor = tf.nn.dropout(self.input_tensor, self.ikeep_prob)
             # hidden layers of language model
-            self.init_state, self.final_state, lstm_output = self._lstm_layers(self.input_tensor,
+            self.init_state, self.final_state, lstm_output = self._lstm_layers(input_tensor,
                 self.unit_num, self.layer_num, self.hkeep_prob, is_train, is_reuse)
             # weight for output layer of language model
             weight = tf.get_variable(shape = [self.unit_num, self.vocab_size],

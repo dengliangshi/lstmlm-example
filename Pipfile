@@ -1,0 +1,14 @@
+[[source]]
+name = "pypi"
+url = "http://mirrors.aliyun.com/pypi/simple/"
+trusted_host = "mirrors.aliyun.com"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+tensorflow = "*"
+numpy = "*"
+
+[requires]
+python_version = "3.6"

@@ -2,48 +2,51 @@
 
 # ---------------------------------------------------------Libraries--------------------------------------------------------
 # Standard Libraries
-import logging
+import argparse
 
 # Third-party Libraries
 
 
 # User Define Modules
-from .args import parser
+
 
 # --------------------------------------------------------Global Strings----------------------------------------------------
 
 
 # -------------------------------------------------------------Main---------------------------------------------------------
-def set_logger(name, log_file):
-    """Set up a logger for recording information during processing.
-    :Param name    : specify a name for logger.
-    :Param log_file: path of file for saving logs.
-    """
-    # set up a logger
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    # create a file handler and set level to debug
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
-    # create console handler and set level to debug
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    # define a formatter for log message
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    formatter = logging.Formatter(format_string)
-    # set message format of file and console handler
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-    # add file and console handler to logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    return logger
-
-def print_args(title, args):
-    """print out all given arguments.
-    :Param title: title will be showed before arguments.
-    :Param args : arguments need be showed.
-    """
-    print(title)
-    for key, value in args.items():
-        print('%s: %r' % (key, value))
+parser = argparse.ArgumentParser(prog = 'python main.py', formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+	description = 'Arguments for language model')
+parser.add_argument('--data_path',        type = str,   default = './data',
+    help = 'path for data files.')
+parser.add_argument('--output_path',      type = str,   default = './result',
+    help = 'path for saving output files.')
+parser.add_argument('--vocab_size',       type = int,   default = 40000,
+    help = 'specify maximum size of vocabulary.')
+parser.add_argument('--bos_mark',         type = str,   default = '[',
+    help = 'mark for begin of a sentence.')
+parser.add_argument('--eos_mark',         type = str,   default = ']',
+    help = 'mark for end of a sentence.')
+parser.add_argument('--oov_mark',         type = str,   default = '|',
+    help = 'mark for token out of vocabulary.')
+parser.add_argument('--pad_mark',         type = str,   default = '~',
+    help = 'mark for paddiing in a sequence.')
+parser.add_argument('--batch_size',       type = int,   default = 16,
+    help = 'size of training batches.')
+parser.add_argument('--seq_length',       type = int,   default = 32,
+    help = 'length of input sequences for model.')
+parser.add_argument('--epoch_num',        type = int,   default = 20,
+    help = 'maximum number of epoch for training.')
+parser.add_argument('--embedding_dim',    type = int,   default = 300,
+    help = 'dimension of word or character embeddings.')
+parser.add_argument('--layer_num',        type = int,   default = 2,
+    help = 'number of lstm hidden layers.')
+parser.add_argument('--unit_num',         type = int,   default = 256,
+    help = 'number of units in lstm hidden layer.')
+parser.add_argument('--grad_cutoff',      type = int,   default = 5,
+    help = 'threshold for gradient cutoff.')
+parser.add_argument('--learn_rate',       type = float, default = 1,
+    help = 'learning rate for training model.')
+parser.add_argument('--ikeep_prob',  type = float, default = 1,
+    help = 'keep probability for dropout in input layer.')
+parser.add_argument('--hkeep_prob', type = float, default = 1,
+    help = 'keep probability for dropout in hidden layers.')

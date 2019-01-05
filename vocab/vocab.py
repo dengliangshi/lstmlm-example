@@ -54,10 +54,9 @@ class Vocab(object):
         self.logger.info('build up vocabulary from training dataset.')
         train_file = os.path.join(self.data_path, 'train.txt')
         vocab = self._collect_token(train_file)
-        token2id[self.pad_mark] = 0
-        token2id[self.bos_mark] = 1
-        token2id[self.eos_mark] = 2
-        token2id[self.oov_word] = 3
+        token2id[self.bos_mark] = 0
+        token2id[self.eos_mark] = 1
+        token2id[self.oov_word] = 2
         self._assign_index(vocab, token2id, self.vocab_size, 4)
         self._save_vocab(vocab_file, token2id)
 
@@ -105,7 +104,7 @@ class Vocab(object):
         input_file.close()
         return vocab_size
     
-    def init_model(self, logger, args):
+    def init_vocab(self, logger, args):
         """Initialize parameters for vocabulary.
         :Param logger: logger for deal with information during processing.
         :Param args  : configration parameters using tensorflow flags.
@@ -116,7 +115,6 @@ class Vocab(object):
         self.oov_word    = args.oov_mark
         self.bos_mark    = args.bos_mark
         self.eos_mark    = args.eos_mark
-        self.pad_mark    = args.pad_mark
         self.data_path   = args.data_path
         self.output_path = args.output_path
         # build up or load in vocabulary
@@ -133,11 +131,22 @@ class Vocab(object):
         :Param seq_length: length of each sequence in batch.
         :Param data_type : target dataset, training, validation or test.
         """
+        index_vector = []
         file_name = ('%s.txt' % data_type)
-        batch_file = os.path.join(self.output_path, file_name)
-        input_file = codecs.open(batch_file, 'r', 'utf-8')
-        index_vector = np.array([int(x)
-            for x in input_file.read().strip().split()])
+        # 
+        data_file = os.path.join(self.data_path, file_name)
+        input_file = codecs.open(data_file, 'r', 'utf-8')
+        # get the indexes of special mark
+        bos_index = self.token2id.get(self.bos_mark)
+        eos_index = self.token2id.get(self.eos_mark)
+        oov_index = self.token2id.get(self.oov_word)
+        # convert token sequence into index one
+        for line in input_file:
+            index_vector.append(bos_index)
+            index_vector.extend([self.token2id.get(token, oov_index)
+                for token in line.strip().split()])
+            index_vector.append(eos_index)
+        index_vector = np.asarray(index_vector, dtype = np.int32)
         batch_num = int(len(index_vector) / (batch_size * seq_length))
         end_index = batch_num * batch_size * seq_length
         input_vector = index_vector[:end_index]

@@ -13,10 +13,11 @@
 import os
 
 # Third-party Libraries
-
+import numpy as np
+import tensorflow as tf
 
 # User Defined Modules
-from .vocab import Vocab
+from vocab import Vocab
 from .graph import Graph
 
 # ------------------------------------------------------------Global--------------------------------------------------------
@@ -57,7 +58,7 @@ class Model(object):
         # create root path for saving output files if not exists
         if not os.path.exists(args.output_path):
             os.mkdir(args.output_path)
-        self.output_path = os.path.join(args.output_path, args.lang)
+        self.output_path = args.output_path
         # create path for saving output files for current writing system
         if not os.path.exists(self.output_path):
             os.mkdir(self.output_path)
@@ -98,14 +99,14 @@ class Model(object):
         return np.exp(np.mean(total_cost))
     
     def train(self):
-        """Train writing system model on given training dataset.
+        """Train language model on given training dataset.
         """
         pre_ppl    = 1e+4        # ppl on validation dataset at previous epoch
         adjust_num = False       # if learning rate has been cutted off
 
         # raise warining if this model is not created for training
         if not self.is_train: raise Exception('this model is not created for trianing')
-        self.logger.info('start training writing system model.')
+        self.logger.info('start training language model.')
         with tf.Session() as session:
             # initialize the whole graph
             session.run(tf.global_variables_initializer())
@@ -123,9 +124,8 @@ class Model(object):
                     for index, (h, c) in enumerate(self.train_model.init_state):
                         feed_dict[c] = pre_state[index].c
                         feed_dict[h] = pre_state[index].h
-                    pre_state, cost, _, _ = session.run(fetches = [self.train_model.final_state,
-                        self.train_model.cost, self.train_model.zero_padding, 
-                        self.train_model.train_op], feed_dict = feed_dict)
+                    pre_state, cost, _ = session.run(fetches = [self.train_model.final_state,
+                        self.train_model.cost, self.train_model.train_op], feed_dict = feed_dict)
                     total_cost.append(cost / self.seq_length)
                 valid_batches = self._vocab.get_batches(self.batch_size, self.seq_length, 'valid')
                 ppl = self._eval_model(session, self.eval_model, valid_batches, self.seq_length)
